@@ -2,7 +2,8 @@
 
 services:
   # --- ACTUALIZADOR DE IP ---
-  duckdns_northcode: # Actualiza la IP de northcodeuy.duckdns.org
+  duckdns_northcode:
+    # Actualiza la IP de northcodeuy.duckdns.org
     image: lscr.io/linuxserver/duckdns:latest # Imagen a la que pertenece el contenedor
     container_name: duckdns_northcode # nombre del contenedor se ve al acer docker ps
     network_mode: host # Aese referencia a que el contenedor use la red del para poder ver la ip publica 
@@ -14,6 +15,15 @@ services:
       - TOKEN=${DUCKDNS_TOKEN} # Token traido de DuckDNS
     restart: unless-stopped # Reinicia el contenedor si se cae
 
+  # --- ADMINER (Gestor de DB ultra liviano) ---
+  vet-db-manager:
+    image: adminer:latest
+    container_name: vet-db-manager
+    restart: always
+    networks: 
+      - northcode-net
+    ports:
+      - "8085:8080" # Entrás por IP_DEL_SERVER:8085
   # --- VPN SEGURA (Acceso desde Artigas) ---
 
   wireguard:
@@ -37,9 +47,7 @@ services:
     #  - net.ipv4.conf.all.src_valid_mark=1
     #  - net.ipv4.ip_forward=1
     restart: unless-stopped
-  
 
-  
   # # VPN Wirward sin interfase adiminstrativa 
   #
   # wireguard: # Wireguard es una VPN que permite acceder a la red local desde cualquier lugar
@@ -70,7 +78,7 @@ services:
 
 
 
-# --- EL VIGILANTE QUE TE AVISA AL CELULAR ---
+  # --- EL VIGILANTE QUE TE AVISA AL CELULAR ---
   uptime-kuma:
     image: louislam/uptime-kuma:1
     container_name: uptime-kuma
@@ -80,22 +88,21 @@ services:
       - "3001:3001" # Este lo podés abrir en el Fortinet para verlo siempre
     restart: unless-stopped
 
-
   # --- REVERSE PROXY (El que reparte el tráfico) ---
-  nginx-proxy: # Nginx Proxy Manager es un proxy inverso que permite gestionar certificados SSL y dominios
+  nginx-proxy:
+    # Nginx Proxy Manager es un proxy inverso que permite gestionar certificados SSL y dominios
     image: 'jc21/nginx-proxy-manager:latest' # Imagen a la que pertenece el contenedor
     container_name: nginx-proxy # Nombre del contenedor se ve al acer docker ps
     restart: unless-stopped # Reinicia el contenedor si se cae
     ports:
-      - '80:80'   # Tráfico Web normal
+      - '80:80' # Tráfico Web normal
       - '443:443' # Tráfico Web Seguro (SSL)
-      - '81:81'   # Panel de Administración
+      - '81:81' # Panel de Administración
     networks:
       - northcode-net
     volumes:
       - ./npm-data:/data # Aca se guardan los archivos del panel
       - ./npm-letsencrypt:/etc/letsencrypt # Aca se guardan los certificados SSL
-
 
   # Portainer: Gestión visual de Docker, Stacks y Logs
   portainer:
